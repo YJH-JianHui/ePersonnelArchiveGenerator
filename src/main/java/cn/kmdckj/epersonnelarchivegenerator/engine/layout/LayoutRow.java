@@ -10,11 +10,13 @@ public class LayoutRow {
     private List<LayoutField> fields;  // 该行包含的字段列表
     private boolean isPageBreak;       // 是否为分页标记行
     private double estimatedHeight;    // 预估高度(单位:mm)
+    private boolean isTitle;           // 是否为标题行,用于分页时防止孤行
 
     public LayoutRow() {
         this.fields = new ArrayList<>();
         this.isPageBreak = false;
         this.estimatedHeight = 8.0;  // 默认单行高度约8mm
+        this.isTitle = false;        // 默认为非标题行
     }
 
     public LayoutRow(boolean isPageBreak) {
@@ -71,5 +73,13 @@ public class LayoutRow {
 
     public void setEstimatedHeight(double estimatedHeight) {
         this.estimatedHeight = estimatedHeight;
+    }
+
+    public boolean isTitle() {
+        return isTitle;
+    }
+
+    public void setTitle(boolean title) {
+        isTitle = title;
     }
 }

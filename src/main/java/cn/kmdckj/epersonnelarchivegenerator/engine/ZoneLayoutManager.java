@@ -1,5 +1,6 @@
 package cn.kmdckj.epersonnelarchivegenerator.engine;
 
+import cn.kmdckj.epersonnelarchivegenerator.config.LayoutConfig;
 import cn.kmdckj.epersonnelarchivegenerator.engine.layout.LayoutRow;
 import cn.kmdckj.epersonnelarchivegenerator.engine.layout.LayoutZone;
 import org.springframework.stereotype.Component;
@@ -10,11 +11,16 @@ import org.springframework.stereotype.Component;
 @Component
 public class ZoneLayoutManager {
 
+    private final LayoutConfig layoutConfig;
+
     // 分区高度常量(单位:mm)
-    private static final double BASIC_INFO_BASE_HEIGHT = 30;    // 基础信息区基础高度(含照片)
     private static final double TITLE_ROW_HEIGHT = 10.0;         // 标题行高度
     private static final double NORMAL_ROW_HEIGHT = 8.0;         // 普通行高度
     private static final double SEPARATOR_HEIGHT = 5.0;          // 分隔行高度
+
+    public ZoneLayoutManager(LayoutConfig layoutConfig) {
+        this.layoutConfig = layoutConfig;
+    }
 
     /**
      * 计算分区总高度
@@ -27,20 +33,19 @@ public class ZoneLayoutManager {
             return 0.0;
         }
 
-        double totalHeight = 0.0;
+        // 首先，计算所有行的总高度
+        double textHeight = zone.getRows().stream()
+                .mapToDouble(LayoutRow::getEstimatedHeight)
+                .sum();
 
-        // 根据分区类型添加基础高度
+        // 如果是带照片的基础信息区，高度需要和照片高度取最大值
         if (zone.getType() == LayoutZone.ZoneType.BASIC_INFO_WITH_PHOTO) {
-            // 基础信息区:需要考虑照片高度
-            totalHeight += BASIC_INFO_BASE_HEIGHT;
+            double photoHeight = layoutConfig.getZone().getPhotoHeight();
+            return Math.max(textHeight, photoHeight);
         }
 
-        // 累加所有行的高度
-        for (LayoutRow row : zone.getRows()) {
-            totalHeight += row.getEstimatedHeight();
-        }
-
-        return totalHeight;
+        // 对于其他分区，直接返回行的总高度
+        return textHeight;
     }
 
     /**

@@ -115,6 +115,7 @@ public class LayoutEngine {
         titleField.setForceFullWidth(true);
         titleRow.addField(titleField);
         titleRow.setEstimatedHeight(10.0);
+        titleRow.setTitle(true);
         zone.addRow(titleRow);
 
         // 遍历每段工作经历
@@ -159,6 +160,7 @@ public class LayoutEngine {
         titleField.setForceFullWidth(true);
         titleRow.addField(titleField);
         titleRow.setEstimatedHeight(10.0);
+        titleRow.setTitle(true);
         zone.addRow(titleRow);
 
         for (int i = 0; i < educations.size(); i++) {
@@ -200,6 +202,7 @@ public class LayoutEngine {
         titleField.setForceFullWidth(true);
         titleRow.addField(titleField);
         titleRow.setEstimatedHeight(10.0);
+        titleRow.setTitle(true);
         zone.addRow(titleRow);
 
         for (int i = 0; i < members.size(); i++) {

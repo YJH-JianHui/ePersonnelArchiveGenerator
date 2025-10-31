@@ -1,77 +1,94 @@
 package cn.kmdckj.epersonnelarchivegenerator.engine;
 
+import cn.kmdckj.epersonnelarchivegenerator.config.LayoutConfig;
 import cn.kmdckj.epersonnelarchivegenerator.engine.layout.LayoutModel;
 import cn.kmdckj.epersonnelarchivegenerator.engine.layout.LayoutRow;
 import cn.kmdckj.epersonnelarchivegenerator.engine.layout.LayoutZone;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
 /**
- * 自动分页计算器 - 根据内容高度自动插入分页符
+ * 自动分页计算器 - 根据内容高度自动插入分页符 (V2 - 统一分页逻辑)
  */
 @Component
 public class PageBreakCalculator {
 
     private final ZoneLayoutManager zoneLayoutManager;
+    private final LayoutConfig layoutConfig;
 
-    // A4页面常量(单位:mm)
-    private static final double A4_HEIGHT = 297.0;
-    private static final double TOP_MARGIN = 0.0;
-    private static final double BOTTOM_MARGIN = 0.0;
-    private static final double PAGE_USABLE_HEIGHT = A4_HEIGHT - TOP_MARGIN - BOTTOM_MARGIN;  // 277mm
-
-    // 分页策略常量
-    private static final double MIN_ROW_HEIGHT_FOR_BREAK = 15.0;  // 最小分页行高阈值
-
-    public PageBreakCalculator(ZoneLayoutManager zoneLayoutManager) {
+    public PageBreakCalculator(ZoneLayoutManager zoneLayoutManager, LayoutConfig layoutConfig) {
         this.zoneLayoutManager = zoneLayoutManager;
+        this.layoutConfig = layoutConfig;
     }
 
     /**
-     * 为布局模型插入分页符
+     * 为布局模型插入分页符 (重写后的统一逻辑)
      *
      * @param model 布局模型
      */
     public void insertPageBreaks(LayoutModel model) {
-        if (model == null || model.getZones() == null) {
+        if (model == null || model.getZones() == null || model.getZones().isEmpty()) {
             return;
         }
 
+        final double usableHeight = layoutConfig.getPage().getUsableHeight();
         double currentPageHeight = 0.0;
 
-        for (LayoutZone zone : model.getZones()) {
-            if (zone.getRows() == null || zone.getRows().isEmpty()) {
+        // 1. 将所有分区的所有行合并到一个总列表中
+        List<LayoutRow> allRows = model.getZones().stream()
+                .flatMap(zone -> zone.getRows().stream())
+                .collect(Collectors.toList());
+
+        // 2. 创建一个新的行列表用于存放包含分页符的结果
+        List<LayoutRow> newRows = new ArrayList<>();
+
+        // 3. 遍历所有行，应用分页逻辑
+        for (int i = 0; i < allRows.size(); i++) {
+            LayoutRow currentRow = allRows.get(i);
+            double currentRowHeight = currentRow.getEstimatedHeight();
+
+            // 如果当前行本身就是分页符，则跳过
+            if (currentRow.isPageBreak()) {
                 continue;
             }
 
-            // 基础信息区特殊处理，不允许分页
-            if (zone.getType() == LayoutZone.ZoneType.BASIC_INFO_WITH_PHOTO) {
-                currentPageHeight += zoneLayoutManager.calculateZoneHeight(zone);
-                continue;
+            // --- 核心分页判断逻辑 ---
+            double requiredHeight = currentRowHeight;
+
+            // "防止孤行"逻辑：如果当前是标题行，则需要额外计算下一行的高度
+            if (currentRow.isTitle() && (i + 1) < allRows.size()) {
+                LayoutRow nextRow = allRows.get(i + 1);
+                requiredHeight += nextRow.getEstimatedHeight();
             }
 
-            java.util.List<LayoutRow> newRows = new java.util.ArrayList<>();
-            for (LayoutRow row : zone.getRows()) {
-                double rowHeight = row.getEstimatedHeight();
-
-                if (currentPageHeight + rowHeight > PAGE_USABLE_HEIGHT) {
-                    // 插入分页符
-                    newRows.add(new LayoutRow(true));
-
-                    // 重置当前页高度
-                    currentPageHeight = 0;
-                }
-                currentPageHeight += rowHeight;
-                newRows.add(row);
+            // 如果当前页放不下所需高度，则插入分页符
+            if (currentPageHeight + requiredHeight > usableHeight) {
+                newRows.add(new LayoutRow(true)); // 插入分页符
+                currentPageHeight = 0; // 重置新页面的高度
             }
-            zone.setRows(newRows);
+
+            // 将当前行加入新列表，并累加高度
+            newRows.add(currentRow);
+            currentPageHeight += currentRowHeight;
         }
+
+        // 4. 清空旧模型，用包含正确分页符的新行列表重建
+        model.getZones().clear();
+        LayoutZone unifiedZone = new LayoutZone("unified", LayoutZone.ZoneType.BODY_CONTENT);
+        unifiedZone.setRows(newRows);
+        model.addZone(unifiedZone);
     }
+
 
     /**
      * 获取布局统计信息(用于调试)
      */
     public LayoutStatistics getStatistics(LayoutModel model) {
         LayoutStatistics stats = new LayoutStatistics();
+        final double usableHeight = layoutConfig.getPage().getUsableHeight();
 
         if (model == null || model.getZones() == null) {
             return stats;
@@ -82,15 +99,13 @@ public class PageBreakCalculator {
         int totalPageBreaks = 0;
 
         for (LayoutZone zone : model.getZones()) {
-            double zoneHeight = zoneLayoutManager.calculateZoneHeight(zone);
-            totalHeight += zoneHeight;
-
             if (zone.getRows() != null) {
-                totalRows += zone.getRows().size();
-
                 for (LayoutRow row : zone.getRows()) {
                     if (row.isPageBreak()) {
                         totalPageBreaks++;
+                    } else {
+                        totalRows++;
+                        totalHeight += row.getEstimatedHeight();
                     }
                 }
             }
@@ -99,7 +114,9 @@ public class PageBreakCalculator {
         stats.totalHeight = totalHeight;
         stats.totalRows = totalRows;
         stats.totalPageBreaks = totalPageBreaks;
-        stats.estimatedPages = (int) Math.ceil(totalHeight / PAGE_USABLE_HEIGHT);
+        if (usableHeight > 0) {
+            stats.estimatedPages = (int) Math.ceil(totalHeight / usableHeight);
+        }
 
         return stats;
     }
