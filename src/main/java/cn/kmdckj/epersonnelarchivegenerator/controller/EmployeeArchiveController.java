@@ -29,7 +29,7 @@ public class EmployeeArchiveController {
     }
 
     /**
-     * 获取员工档案PDF
+     * 获取员工档案PDF - 在线预览
      * 访问: http://localhost:8080/employee/{employeeId}
      * 例如: http://localhost:8080/employee/001
      *
@@ -44,12 +44,14 @@ public class EmployeeArchiveController {
             // 生成PDF
             byte[] pdfBytes = employeeArchiveService.generateEmployeeArchivePdf(employeeId);
 
-            // 设置响应头
+            // 设置响应头 - 关键修改点
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_PDF);
             headers.setContentLength(pdfBytes.length);
-            // inline: 在浏览器中直接显示; attachment: 下载
-            headers.setContentDispositionFormData("inline", "employee-" + employeeId + ".pdf");
+
+            // 使用 inline 并且不设置 filename，让浏览器直接预览
+            headers.add(HttpHeaders.CONTENT_DISPOSITION, "inline");
+
             // 禁用缓存,确保每次都是最新数据
             headers.setCacheControl("no-cache, no-store, must-revalidate");
             headers.setPragma("no-cache");
@@ -86,8 +88,10 @@ public class EmployeeArchiveController {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_PDF);
             headers.setContentLength(pdfBytes.length);
-            // attachment: 强制下载
-            headers.setContentDispositionFormData("attachment", "employee-archive-" + employeeId + ".pdf");
+
+            // 下载模式 - 使用 attachment
+            headers.add(HttpHeaders.CONTENT_DISPOSITION,
+                    "attachment; filename=\"employee-archive-" + employeeId + ".pdf\"");
 
             return new ResponseEntity<>(pdfBytes, headers, HttpStatus.OK);
 
