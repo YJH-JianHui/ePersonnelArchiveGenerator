@@ -1,1 +1,56 @@
-spring.application.name=ePersonnelArchiveGenerator
+# ????
+spring:
+  application:
+    name: employee-archive-system
+  thymeleaf:
+    cache: false
+    mode: HTML
+    encoding: UTF-8
+    prefix: classpath:/templates/
+    suffix: .html
+
+# ??????
+archive:
+  layout:
+    page:
+      width: 210
+      height: 297
+      margin-top: 20
+      margin-bottom: 20
+      margin-left: 20
+      margin-right: 20
+      usable-width: 170
+      usable-height: 257
+    row:
+      default-height: 8
+      title-height: 10
+      separator-height: 5
+      min-break-height: 15
+    field:
+      min-width: 20
+      max-length-threshold: 50
+    zone:
+      header-base-height: 60
+      header-text-width-percent: 75
+      photo-width: 35
+      photo-height: 45
+
+  # PDF??
+  pdf:
+    font-path: fonts/simsun.ttc
+    font-family: SimSun
+    dpi: 96
+    enable-svg: false
+    enable-debug: false
+
+# ?????
+server:
+  port: 8080
+
+# ????
+logging:
+  level:
+    root: INFO
+    com.yourcompany.archive: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"

@@ -1,4 +1,15 @@
 package cn.kmdckj.epersonnelarchivegenerator.service;
 
-public class ArchiveGenerationException {
+/**
+ * 档案生成异常
+ */
+public class ArchiveGenerationException extends RuntimeException {
+
+    public ArchiveGenerationException(String message) {
+        super(message);
+    }
+
+    public ArchiveGenerationException(String message, Throwable cause) {
+        super(message, cause);
+    }
 }

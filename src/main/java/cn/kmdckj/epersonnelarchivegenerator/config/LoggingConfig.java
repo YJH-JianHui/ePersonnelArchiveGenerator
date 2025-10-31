@@ -1,4 +1,4 @@
-package cn.kmdckj.epersonnelarchivegenerator.engine.config;
+package cn.kmdckj.epersonnelarchivegenerator.config;
 
 import org.springframework.context.annotation.Configuration;
 
