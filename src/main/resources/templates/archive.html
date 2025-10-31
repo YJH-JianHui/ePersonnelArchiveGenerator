@@ -2,25 +2,17 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8"/>
-    <title>人事档案</title>
+    <title>人事档案资料表</title>
     <style>
-        /* ==================== 页面设置 ==================== */
         @page {
             size: A4;
             margin: 20mm;
         }
 
-        /* 强制分页 */
         .page-break {
             page-break-after: always;
         }
 
-        /* 避免在元素内部分页 */
-        .avoid-break {
-            page-break-inside: avoid;
-        }
-
-        /* ==================== 全局样式 ==================== */
         * {
             margin: 0;
             padding: 0;
@@ -29,48 +21,76 @@
 
         body {
             font-family: "SimSun", "STSong", serif;
-            font-size: 12pt;
-            line-height: 1.6;
+            font-size: 10pt;
+            line-height: 1.2;
             color: #000;
             background: #fff;
         }
 
-        /* ==================== 分区容器 ==================== */
-        .zone {
+        .document-container {
             width: 100%;
-            margin-bottom: 10mm;
         }
 
-        .zone-title {
-            font-size: 14pt;
-            font-weight: bold;
-            text-align: center;
+        /* 表格样式 */
+        .info-table {
+            width: 100%;
+            border-collapse: collapse;
             margin-bottom: 5mm;
-            padding: 3mm 0;
-            border-bottom: 2px solid #000;
+            table-layout: fixed;
         }
 
-        /* ==================== 页眉区(基础信息+照片) ==================== */
-        .header-zone {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
+        .info-table td {
             border: 1px solid #000;
-            padding: 5mm;
-            margin-bottom: 8mm;
+            padding: 2mm 1mm;
+            vertical-align: middle;
+            word-wrap: break-word;
         }
 
-        .header-text-area {
-            flex: 0 0 75%;
-            display: flex;
-            flex-direction: column;
+        .info-table .label-cell {
+            background-color: #f5f5f5;
+            font-weight: bold;
+            text-align: right;
+            padding-right: 2mm;
+            width: 18%;
         }
 
-        .header-photo-area {
-            flex: 0 0 20%;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
+        .info-table .value-cell {
+            text-align: left;
+            padding-left: 2mm;
+        }
+
+        /* 页眉区表格 - 包含照片 */
+        .header-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 5mm;
+        }
+
+        .header-table td {
+            border: 1px solid #000;
+            padding: 2mm 1mm;
+            vertical-align: middle;
+        }
+
+        .header-table .label-cell {
+            background-color: #f5f5f5;
+            font-weight: bold;
+            text-align: right;
+            padding-right: 2mm;
+            width: 15%;
+        }
+
+        .header-table .value-cell {
+            text-align: left;
+            padding-left: 2mm;
+            width: 35%;
+        }
+
+        .header-table .photo-cell {
+            text-align: center;
+            vertical-align: middle;
+            width: 50%;
+            padding: 2mm;
         }
 
         .header-photo {
@@ -80,182 +100,118 @@
             object-fit: cover;
         }
 
-        /* ==================== 行布局 ==================== */
-        .layout-row {
-            display: flex;
-            flex-wrap: nowrap;
-            align-items: baseline;
-            margin-bottom: 2mm;
-            min-height: 8mm;
-        }
-
-        .layout-row.full-width {
-            display: block;
-        }
-
-        /* ==================== 字段样式 ==================== */
-        .layout-field {
-            display: inline-flex;
-            align-items: baseline;
-            padding: 1mm 2mm;
-        }
-
-        .layout-field.full-width {
+        /* 分区标题 */
+        .section-title {
             width: 100%;
-            display: block;
-        }
-
-        .field-label {
-            font-weight: bold;
-            margin-right: 1mm;
-            white-space: nowrap;
-        }
-
-        .field-value {
-            word-wrap: break-word;
-            word-break: break-all;
-        }
-
-        /* ==================== 单栏内容区 ==================== */
-        .single-column-zone {
             border: 1px solid #000;
-            padding: 5mm;
+            background-color: #e0e0e0;
+            text-align: center;
+            font-weight: bold;
+            font-size: 12pt;
+            padding: 3mm 0;
+            margin-top: 5mm;
+            margin-bottom: 0mm;
         }
 
-        .content-section {
-            margin-bottom: 5mm;
-        }
-
-        .content-section:last-child {
-            margin-bottom: 0;
-        }
-
-        /* ==================== 表格样式(用于列表型数据) ==================== */
-        .data-table {
+        /* 列表项表格 */
+        .list-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 3mm;
+            margin-bottom: 0mm;
         }
 
-        .data-table th,
-        .data-table td {
+        .list-table td {
             border: 1px solid #000;
-            padding: 2mm;
-            text-align: left;
+            padding: 2mm 1mm;
+            vertical-align: middle;
         }
 
-        .data-table th {
-            background-color: #f0f0f0;
+        .list-table .label-cell {
+            background-color: #f5f5f5;
             font-weight: bold;
+            text-align: right;
+            padding-right: 2mm;
+            width: 18%;
         }
 
-        /* ==================== 分隔线 ==================== */
-        .separator {
-            height: 5mm;
+        .list-table .value-cell {
+            text-align: left;
+            padding-left: 2mm;
         }
 
-        /* ==================== 打印优化 ==================== */
         @media print {
             body {
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
             }
-
-            .page-break {
-                page-break-after: always;
-            }
         }
     </style>
 </head>
 <body>
-<!-- 主布局容器 -->
 <div class="document-container">
 
-    <!-- 遍历所有分区 -->
-    <div th:each="zone, zoneIter : ${layoutModel.zones}">
+    <div th:each="zone : ${layoutModel.zones}">
 
-        <!-- ==================== 页眉区:基础信息+照片 ==================== -->
-        <div th:if="${zone.type.name() == 'HEADER_WITH_PHOTO'}" class="zone header-zone">
-            <!-- 左侧文本区 -->
-            <div class="header-text-area">
-                <!-- 遍历行 -->
-                <div th:each="row : ${zone.rows}"
-                     th:unless="${row.pageBreak}"
-                     class="layout-row"
-                     th:classappend="${row.fields.size() == 1 && row.fields[0].forceFullWidth} ? 'full-width' : ''">
+        <!-- 页眉区:基础信息+照片 -->
+        <div th:if="${zone.type.name() == 'HEADER_WITH_PHOTO'}">
+            <table class="header-table">
+                <tr th:each="row, rowStat : ${zone.rows}" th:unless="${row.pageBreak}">
+                    <!-- 标签列 -->
+                    <td class="label-cell" th:if="${row.fields[0] != null}" th:text="${row.fields[0].label}">标签</td>
+                    <!-- 值列 -->
+                    <td class="value-cell" th:if="${row.fields[0] != null}" th:text="${row.fields[0].value}">值</td>
 
-                    <!-- 遍历字段 -->
-                    <div th:each="field : ${row.fields}"
-                         class="layout-field"
-                         th:classappend="${field.forceFullWidth} ? 'full-width' : ''"
-                         th:style="'width: ' + ${field.widthPercent} + '%;'">
-                        <span class="field-label" th:text="${field.label}">标签:</span>
-                        <span class="field-value" th:text="${field.value}">值</span>
-                    </div>
-                </div>
-            </div>
+                    <!-- 第二个字段（如果有） -->
+                    <th:block th:if="${row.fields.size() > 1}">
+                        <td class="label-cell" th:text="${row.fields[1].label}">标签</td>
+                        <td class="value-cell" th:text="${row.fields[1].value}">值</td>
+                    </th:block>
 
-            <!-- 右侧照片区 -->
-            <div class="header-photo-area" th:if="${zone.metadata != null}">
-                <img class="header-photo"
-                     th:src="'data:image/jpeg;base64,' + ${zone.metadata.photoBase64}"
-                     alt="员工照片"/>
-            </div>
+                    <!-- 照片单元格（只在第一行显示，跨越多行） -->
+                    <td th:if="${rowStat.index == 0 && zone.metadata != null}"
+                        class="photo-cell"
+                        th:rowspan="${zone.rows.size()}">
+                        <img class="header-photo"
+                             th:src="'data:image/jpeg;base64,' + ${zone.metadata.photoBase64}"
+                             alt="照片"/>
+                    </td>
+                </tr>
+            </table>
         </div>
 
-        <!-- ==================== 单栏内容区 ==================== -->
-        <div th:if="${zone.type.name() == 'SINGLE_COLUMN'}" class="zone single-column-zone">
-            <!-- 遍历行 -->
+        <!-- 单栏内容区 -->
+        <div th:if="${zone.type.name() == 'SINGLE_COLUMN'}">
             <div th:each="row, rowIter : ${zone.rows}">
 
                 <!-- 分页符 -->
                 <div th:if="${row.pageBreak}" class="page-break"></div>
 
-                <!-- 普通内容行 -->
-                <div th:unless="${row.pageBreak}">
-                    <!-- 标题行(字段没有标签的独占行) -->
-                    <div th:if="${row.fields.size() == 1 && row.fields[0].forceFullWidth && row.fields[0].label != null && !row.fields[0].label.isEmpty() && row.fields[0].value.isEmpty()}"
-                         class="zone-title">
-                        <span th:text="${row.fields[0].label}">标题</span>
-                    </div>
-
-                    <!-- 普通数据行 -->
-                    <div th:unless="${row.fields.size() == 1 && row.fields[0].forceFullWidth && row.fields[0].label != null && !row.fields[0].label.isEmpty() && row.fields[0].value.isEmpty()}"
-                         class="layout-row"
-                         th:classappend="${row.fields.size() == 1 && row.fields[0].forceFullWidth} ? 'full-width' : ''">
-
-                        <!-- 遍历字段 -->
-                        <div th:each="field : ${row.fields}"
-                             class="layout-field"
-                             th:classappend="${field.forceFullWidth} ? 'full-width' : ''"
-                             th:style="${!field.forceFullWidth} ? 'width: ' + ${field.widthPercent} + '%;' : ''">
-                                <span class="field-label" th:if="${field.label != null && !field.label.isEmpty()}"
-                                      th:text="${field.label}">标签:</span>
-                            <span class="field-value" th:text="${field.value}">值</span>
-                        </div>
-                    </div>
+                <!-- 区域标题 -->
+                <div th:if="${!row.pageBreak && row.fields.size() == 1 && row.fields[0].forceFullWidth && row.fields[0].value.isEmpty()}"
+                     class="section-title">
+                    <span th:text="${row.fields[0].label}">标题</span>
                 </div>
-            </div>
-        </div>
 
-        <!-- ==================== 表格区(预留,目前未使用) ==================== -->
-        <div th:if="${zone.type.name() == 'TABLE'}" class="zone">
-            <table class="data-table">
-                <thead>
-                <tr>
-                    <th th:each="header : ${zone.metadata.columnHeaders}"
-                        th:text="${header}">列标题
-                    </th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr th:each="row : ${zone.rows}" th:unless="${row.pageBreak}">
-                    <td th:each="field : ${row.fields}"
-                        th:text="${field.value}">单元格
-                    </td>
-                </tr>
-                </tbody>
-            </table>
+                <!-- 数据行 -->
+                <table th:if="${!row.pageBreak && !(row.fields.size() == 1 && row.fields[0].forceFullWidth && row.fields[0].value.isEmpty())}"
+                       class="list-table">
+                    <tr>
+                        <th:block th:each="field, fieldStat : ${row.fields}">
+                            <!-- 如果是独占行 -->
+                            <th:block th:if="${field.forceFullWidth}">
+                                <td class="label-cell" th:text="${field.label}">标签</td>
+                                <td class="value-cell" colspan="3" th:text="${field.value}">值</td>
+                            </th:block>
+
+                            <!-- 如果不是独占行 -->
+                            <th:block th:unless="${field.forceFullWidth}">
+                                <td class="label-cell" th:text="${field.label}">标签</td>
+                                <td class="value-cell" th:text="${field.value}">值</td>
+                            </th:block>
+                        </th:block>
+                    </tr>
+                </table>
+            </div>
         </div>
 
     </div>
