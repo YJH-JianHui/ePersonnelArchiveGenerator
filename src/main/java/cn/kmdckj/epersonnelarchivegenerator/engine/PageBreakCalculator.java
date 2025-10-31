@@ -5,8 +5,6 @@ import cn.kmdckj.epersonnelarchivegenerator.engine.layout.LayoutRow;
 import cn.kmdckj.epersonnelarchivegenerator.engine.layout.LayoutZone;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
-
 /**
  * 自动分页计算器 - 根据内容高度自动插入分页符
  */
@@ -17,9 +15,9 @@ public class PageBreakCalculator {
 
     // A4页面常量(单位:mm)
     private static final double A4_HEIGHT = 297.0;
-    private static final double TOP_MARGIN = 20.0;
-    private static final double BOTTOM_MARGIN = 20.0;
-    private static final double PAGE_USABLE_HEIGHT = A4_HEIGHT - TOP_MARGIN - BOTTOM_MARGIN;  // 257mm
+    private static final double TOP_MARGIN = 0.0;
+    private static final double BOTTOM_MARGIN = 0.0;
+    private static final double PAGE_USABLE_HEIGHT = A4_HEIGHT - TOP_MARGIN - BOTTOM_MARGIN;  // 277mm
 
     // 分页策略常量
     private static final double MIN_ROW_HEIGHT_FOR_BREAK = 15.0;  // 最小分页行高阈值
@@ -39,162 +37,34 @@ public class PageBreakCalculator {
         }
 
         double currentPageHeight = 0.0;
-        int pageNumber = 1;
 
         for (LayoutZone zone : model.getZones()) {
-            // 计算分区总高度
-            double zoneHeight = zoneLayoutManager.calculateZoneHeight(zone);
+            if (zone.getRows() == null || zone.getRows().isEmpty()) {
+                continue;
+            }
 
-            // 检查是否需要在分区前分页
-            if (currentPageHeight + zoneHeight > PAGE_USABLE_HEIGHT) {
-                // 需要分页
+            // 基础信息区特殊处理，不允许分页
+            if (zone.getType() == LayoutZone.ZoneType.BASIC_INFO_WITH_PHOTO) {
+                currentPageHeight += zoneLayoutManager.calculateZoneHeight(zone);
+                continue;
+            }
 
-                // 如果分区可以拆分,则在分区内部插入分页符
-                if (canSplitZone(zone)) {
-                    double remainingHeight = PAGE_USABLE_HEIGHT - currentPageHeight;
-                    insertPageBreakInZone(zone, remainingHeight);
+            java.util.List<LayoutRow> newRows = new java.util.ArrayList<>();
+            for (LayoutRow row : zone.getRows()) {
+                double rowHeight = row.getEstimatedHeight();
 
-                    // 重新计算当前页高度
-                    currentPageHeight = calculateHeightAfterLastBreak(zone);
-                } else {
-                    // 分区不可拆分,在分区前整体分页
-                    // 在前一个分区末尾插入分页符(此处简化处理)
-                    currentPageHeight = zoneHeight;
-                    pageNumber++;
+                if (currentPageHeight + rowHeight > PAGE_USABLE_HEIGHT) {
+                    // 插入分页符
+                    newRows.add(new LayoutRow(true));
+
+                    // 重置当前页高度
+                    currentPageHeight = 0;
                 }
-            } else {
-                // 不需要分页,累加高度
-                currentPageHeight += zoneHeight;
+                currentPageHeight += rowHeight;
+                newRows.add(row);
             }
-
-            // 检查分区内是否需要进一步分页
-            if (currentPageHeight > PAGE_USABLE_HEIGHT) {
-                double excessHeight = currentPageHeight - PAGE_USABLE_HEIGHT;
-                insertAdditionalBreaksInZone(zone, excessHeight);
-                currentPageHeight = calculateHeightAfterLastBreak(zone);
-            }
+            zone.setRows(newRows);
         }
-    }
-
-    /**
-     * 判断分区是否可以拆分
-     * 页眉区不可拆分,其他区域可拆分
-     */
-    private boolean canSplitZone(LayoutZone zone) {
-        return zone.getType() != LayoutZone.ZoneType.HEADER_WITH_PHOTO;
-    }
-
-    /**
-     * 在分区内插入分页符
-     *
-     * @param zone 分区
-     * @param remainingHeight 当前页剩余高度
-     */
-    private void insertPageBreakInZone(LayoutZone zone, double remainingHeight) {
-        List<LayoutRow> rows = zone.getRows();
-        if (rows == null || rows.isEmpty()) {
-            return;
-        }
-
-        double accumulatedHeight = 0.0;
-        int breakIndex = -1;
-
-        // 找到最佳分页位置
-        for (int i = 0; i < rows.size(); i++) {
-            LayoutRow row = rows.get(i);
-            double rowHeight = row.getEstimatedHeight();
-
-            if (accumulatedHeight + rowHeight > remainingHeight) {
-                // 找到超出位置
-
-                // 检查是否应该在此处分页
-                if (rowHeight < MIN_ROW_HEIGHT_FOR_BREAK && i > 0) {
-                    // 行高较小且不是第一行,在前一行后分页
-                    breakIndex = i;
-                } else if (i > 0) {
-                    // 行高较大,在前一行后分页避免截断
-                    breakIndex = i;
-                } else {
-                    // 第一行就超出,在此行后分页
-                    breakIndex = i + 1;
-                }
-
-                break;
-            }
-
-            accumulatedHeight += rowHeight;
-        }
-
-        // 插入分页标记行
-        if (breakIndex > 0 && breakIndex < rows.size()) {
-            LayoutRow pageBreakRow = new LayoutRow(true);
-            rows.add(breakIndex, pageBreakRow);
-        }
-    }
-
-    /**
-     * 在分区内插入额外的分页符(处理超长分区)
-     */
-    private void insertAdditionalBreaksInZone(LayoutZone zone, double excessHeight) {
-        List<LayoutRow> rows = zone.getRows();
-        if (rows == null || rows.isEmpty()) {
-            return;
-        }
-
-        // 从后往前找到最后一个分页符的位置
-        int lastBreakIndex = -1;
-        for (int i = rows.size() - 1; i >= 0; i--) {
-            if (rows.get(i).isPageBreak()) {
-                lastBreakIndex = i;
-                break;
-            }
-        }
-
-        // 计算最后一个分页符之后的内容高度
-        double heightAfterBreak = 0.0;
-        int startIndex = lastBreakIndex + 1;
-
-        for (int i = startIndex; i < rows.size(); i++) {
-            heightAfterBreak += rows.get(i).getEstimatedHeight();
-
-            // 如果累计高度超过页面高度,插入新的分页符
-            if (heightAfterBreak > PAGE_USABLE_HEIGHT) {
-                LayoutRow pageBreakRow = new LayoutRow(true);
-                rows.add(i, pageBreakRow);
-                heightAfterBreak = 0.0;
-                i++;  // 跳过刚插入的分页符
-            }
-        }
-    }
-
-    /**
-     * 计算最后一个分页符之后的内容高度
-     */
-    private double calculateHeightAfterLastBreak(LayoutZone zone) {
-        List<LayoutRow> rows = zone.getRows();
-        if (rows == null || rows.isEmpty()) {
-            return 0.0;
-        }
-
-        double height = 0.0;
-
-        // 从后往前找到最后一个分页符
-        for (int i = rows.size() - 1; i >= 0; i--) {
-            if (rows.get(i).isPageBreak()) {
-                // 找到了,计算其后的高度
-                for (int j = i + 1; j < rows.size(); j++) {
-                    height += rows.get(j).getEstimatedHeight();
-                }
-                return height;
-            }
-        }
-
-        // 没有找到分页符,计算全部高度
-        for (LayoutRow row : rows) {
-            height += row.getEstimatedHeight();
-        }
-
-        return height;
     }
 
     /**

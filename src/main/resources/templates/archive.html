@@ -5,8 +5,12 @@
     <title>人事档案资料表</title>
     <style>
         @page {
+            /* size: A4; 定义了PDF的纸张大小为A4 */
             size: A4;
-            margin: 20mm;
+            /* margin-top: 20mm; 定义了PDF的上边距，即页眉的高度 */
+            margin-top: 10mm;
+            /* margin-bottom: 20; 定义了PDF的下边距，即页脚的高度 */
+            margin-bottom: 10mm;
         }
 
         .page-break {
@@ -59,7 +63,7 @@
             padding-left: 2mm;
         }
 
-        /* 页眉区表格 - 包含照片 */
+        /* 基础信息区表格 - 包含照片 */
         .header-table {
             width: 100%;
             border-collapse: collapse;
@@ -152,8 +156,8 @@
 
     <div th:each="zone : ${layoutModel.zones}">
 
-        <!-- 页眉区:基础信息+照片 -->
-        <div th:if="${zone.type.name() == 'HEADER_WITH_PHOTO'}">
+        <!-- 基础信息区:基础信息+照片 -->
+        <div th:if="${zone.type.name() == 'BASIC_INFO_WITH_PHOTO'}">
             <table class="header-table">
                 <tr th:each="row, rowStat : ${zone.rows}" th:unless="${row.pageBreak}">
                     <!-- 标签列 -->
@@ -179,8 +183,8 @@
             </table>
         </div>
 
-        <!-- 单栏内容区 -->
-        <div th:if="${zone.type.name() == 'SINGLE_COLUMN'}">
+        <!-- 正文内容区 -->
+        <div th:if="${zone.type.name() == 'BODY_CONTENT'}">
             <div th:each="row, rowIter : ${zone.rows}">
 
                 <!-- 分页符 -->

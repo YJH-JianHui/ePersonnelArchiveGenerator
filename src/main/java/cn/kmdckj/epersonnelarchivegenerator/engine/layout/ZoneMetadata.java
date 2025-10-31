@@ -6,7 +6,7 @@ package cn.kmdckj.epersonnelarchivegenerator.engine.layout;
 public class ZoneMetadata {
 
     /**
-     * 页眉区照片元数据
+     * 基础信息区照片元数据
      */
     public static class PhotoMetadata {
         private String photoBase64;  // Base64编码的照片

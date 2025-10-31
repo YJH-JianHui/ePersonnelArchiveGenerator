@@ -13,8 +13,8 @@ public class LayoutZone {
     private Object metadata;         // 额外元数据(如照片数据等)
 
     public enum ZoneType {
-        HEADER_WITH_PHOTO,   // 页眉区:左侧多栏文本 + 右侧照片
-        SINGLE_COLUMN,       // 单栏内容区
+        BASIC_INFO_WITH_PHOTO,   // 基础信息区:左侧多栏文本 + 右侧照片
+        BODY_CONTENT,       // 正文内容区
         TABLE,               // 表格区(用于工作经历、教育背景等)
         CUSTOM               // 自定义区
     }

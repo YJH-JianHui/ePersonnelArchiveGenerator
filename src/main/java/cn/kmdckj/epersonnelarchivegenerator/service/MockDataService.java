@@ -82,7 +82,7 @@ public class MockDataService {
         family3.setAge(32);
         family3.setWorkUnit("北京市第一医院");
 
-        emp1.setFamilyMembers(Arrays.asList(family1, family2, family3));
+        emp1.setFamilyMembers(Arrays.asList(family1, family2, family3, family1, family2, family3, family1, family2, family3, family1, family2, family3));
 
         MOCK_DATA.put("001", emp1);
 

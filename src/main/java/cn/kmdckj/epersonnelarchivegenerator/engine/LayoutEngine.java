@@ -38,9 +38,9 @@ public class LayoutEngine {
     public LayoutModel calculateLayout(Employee employee) {
         LayoutModel model = new LayoutModel();
 
-        // 1. 页眉区:基础信息 + 照片
-        LayoutZone headerZone = createHeaderZone(employee);
-        model.addZone(headerZone);
+        // 1. 基础信息区:基础信息 + 照片
+        LayoutZone basicInfoZone = createBasicInfoZone(employee);
+        model.addZone(basicInfoZone);
 
         // 2. 工作经历区
         if (employee.getWorkExperiences() != null && !employee.getWorkExperiences().isEmpty()) {
@@ -64,10 +64,10 @@ public class LayoutEngine {
     }
 
     /**
-     * 创建页眉区(基础信息 + 照片)
+     * 创建基础信息区(基础信息 + 照片)
      */
-    private LayoutZone createHeaderZone(Employee employee) {
-        LayoutZone zone = new LayoutZone("header", LayoutZone.ZoneType.HEADER_WITH_PHOTO);
+    private LayoutZone createBasicInfoZone(Employee employee) {
+        LayoutZone zone = new LayoutZone("basicInfo", LayoutZone.ZoneType.BASIC_INFO_WITH_PHOTO);
 
         // 设置照片元数据
         if (employee.getPhotoBase64() != null && !employee.getPhotoBase64().isEmpty()) {
@@ -107,7 +107,7 @@ public class LayoutEngine {
      * 创建工作经历区
      */
     private LayoutZone createWorkExperienceZone(List<Employee.WorkExperience> experiences) {
-        LayoutZone zone = new LayoutZone("workExperience", LayoutZone.ZoneType.SINGLE_COLUMN);
+        LayoutZone zone = new LayoutZone("workExperience", LayoutZone.ZoneType.BODY_CONTENT);
 
         // 添加标题行
         LayoutRow titleRow = new LayoutRow();
@@ -151,7 +151,7 @@ public class LayoutEngine {
      * 创建教育背景区
      */
     private LayoutZone createEducationZone(List<Employee.Education> educations) {
-        LayoutZone zone = new LayoutZone("education", LayoutZone.ZoneType.SINGLE_COLUMN);
+        LayoutZone zone = new LayoutZone("education", LayoutZone.ZoneType.BODY_CONTENT);
 
         // 添加标题行
         LayoutRow titleRow = new LayoutRow();
@@ -192,7 +192,7 @@ public class LayoutEngine {
      * 创建家庭成员区
      */
     private LayoutZone createFamilyZone(List<Employee.FamilyMember> members) {
-        LayoutZone zone = new LayoutZone("family", LayoutZone.ZoneType.SINGLE_COLUMN);
+        LayoutZone zone = new LayoutZone("family", LayoutZone.ZoneType.BODY_CONTENT);
 
         // 添加标题行
         LayoutRow titleRow = new LayoutRow();

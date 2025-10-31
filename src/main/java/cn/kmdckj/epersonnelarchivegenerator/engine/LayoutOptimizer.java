@@ -52,12 +52,12 @@ public class LayoutOptimizer {
 
         for (LayoutZone zone : model.getZones()) {
             switch (zone.getType()) {
-                case HEADER_WITH_PHOTO:
-                    zoneLayoutManager.optimizeHeaderZone(zone);
+                case BASIC_INFO_WITH_PHOTO:
+                    zoneLayoutManager.optimizeBasicInfoZone(zone);
                     break;
 
-                case SINGLE_COLUMN:
-                    zoneLayoutManager.optimizeSingleColumnZone(zone);
+                case BODY_CONTENT:
+                    zoneLayoutManager.optimizeBodyContentZone(zone);
                     break;
 
                 default:
